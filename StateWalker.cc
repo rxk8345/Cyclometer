@@ -14,26 +14,28 @@
 #include <fcntl.h>
 #include <semaphore.h>
 #include <errno.h>			// defines EOK
+#include <StateWalker.h>
+
+extern int DEBUGINT;
 
 //*****************State Walker Class Definition
-class StateWalker{
-public:
-	StateNode *currentState;
-	void defaultTran(){
-		currentState = defaultTransition.accept();
-	}
-	void accept(event e){
-		currentState = currentState->accept(e);//ask the current state to accept this event
-	}
-	state is_in(){
-		return currentState->is_in();
-	}
+StateWalker::StateWalker(){}
 
-protected:
-	DefaultTran defaultTransition;
-};
+void StateWalker::defaultTran(){
+	currentState = defaultTrans->accept();
+}
 
-StateWalker skyWalker;
+void StateWalker::accept(event e){
+	DEBUGINT++;
+	StateNode* temp = currentState->accept(e);//ask the current state to accept this event
+	delete(currentState);
+	currentState = temp;
+}
+
+state StateWalker::is_in(){
+	return currentState->is_in();
+}
+
 
 
 //*****************Polling Thread
@@ -45,7 +47,7 @@ void* PollingThread(void* args){
 	Message replyMessage;
 	sendingMessage.hdr.type = 0 ;
 	sendingMessage.hdr.subtype = 0 ;
-	sendingMessage.triggeredEvent = BP;
+	sendingMessage.triggerEvent = NAE;
 	int connectionID = name_open( CHANNELNAME, 0 ) ;
 	sleep(1);//ensure that the server channel has been created before we continue
 
@@ -53,14 +55,20 @@ void* PollingThread(void* args){
 	for(;;){
 		std::cin >> inChar;
 		switch(inChar){
-		case 'r' :
-			sendingMessage.triggeredEvent = BP;
+		case 's' :
+			sendingMessage.triggerEvent = Set;
 			break;
-		case 'm':
-			sendingMessage.triggeredEvent = OC;
+		case 't':
+			sendingMessage.triggerEvent = SetTire;
 			break;
 		case 'i':
-			sendingMessage.triggeredEvent = IR;
+			sendingMessage.triggerEvent = Increase;
+			break;
+		case 'm':
+			sendingMessage.triggerEvent = ToggleMode;
+			break;
+		case 'a':
+			sendingMessage.triggerEvent = Start_Stop;
 			break;
 		}
 
@@ -68,11 +76,4 @@ void* PollingThread(void* args){
 		//send the message to the State Machine Controller
 	}
 	return 0;
-}
-
-
-int main(int argc, char *argv[]) {
-
-	
-	return EXIT_SUCCESS;
 }
