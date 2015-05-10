@@ -23,8 +23,11 @@ StateNode* SetUnitState::accept(event e){
 	if(tran.checkAccept(e)){
 		SetUnitState::exitState();
 		return tran.accept();
-	}
-	else{
+	}else if( e == Reset){
+		SetUnitState::exitState();
+		StateNode * returnState = new SetUnitState();
+		return returnState;
+	}else{
 		StateNode * returnState = new SetUnitState();
 		return returnState;
 	}
@@ -45,6 +48,10 @@ StateNode * SetTireCircState::accept(event e){
 		if(tran.checkAccept(e)){
 			SetTireCircState::exitState();
 			return tran.accept();
+		}else if( e == Reset || e == Set){
+			SetTireCircState::exitState();
+			StateNode * returnState = new SetTireCircState();
+			return returnState;
 		}
 		else{
 			StateNode * returnState = new SetTireCircState();
@@ -79,6 +86,11 @@ StateNode * ManualState::accept(event e){
 		ManualState::exitState();
 		return tran3.accept();
 	}
+	else if( e == Reset){
+		ManualState::exitState();
+		StateNode * returnState = new ManualState();
+		return returnState;
+	}
 	else{
 		StateNode * returnState = new ManualState();
 		return returnState;
@@ -107,6 +119,10 @@ StateNode * AutomaticState::accept(event e){
 	else if (tran2.checkAccept(e)){
 		AutomaticState::exitState();
 		return tran2.accept();
+	}else if( e == Reset){
+		AutomaticState::exitState();
+		StateNode * returnState = new AutomaticState();
+		return returnState;
 	}
 	else{
 		StateNode * returnState = new AutomaticState();
@@ -139,9 +155,13 @@ StateNode * ChangeTireCircState::accept(event e){
 		return tran2.accept();
 	}
 	else if (tran3.checkAccept(e)){
-			ChangeTireCircState::exitState();
-			return tran3.accept();
-		}
+		ChangeTireCircState::exitState();
+		return tran3.accept();
+	}else if( e == Reset){
+		ChangeTireCircState::exitState();
+		StateNode * returnState = new ChangeTireCircState();
+		return returnState;
+	}
 	else{
 		StateNode * returnState = new ChangeTireCircState();
 		return returnState;

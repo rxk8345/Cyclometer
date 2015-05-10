@@ -3,6 +3,8 @@
 #include "Events.h"
 #include "State.h"
 #include "Transition.h"
+#include "Calculate.h"
+#include "HAL.h"
 #include <pthread.h>
 
 #include "StateWalker.h"
@@ -10,6 +12,7 @@
 int DEBUGINT = 0;
 
 modeEnum mode = notSet;
+bool calculateIsOn = false;
 
 int main(int argc, char *argv[]) {
 	std::cout << "Welcome to the QNX Momentics IDE" << std::endl;
@@ -17,6 +20,10 @@ int main(int argc, char *argv[]) {
 	skyWalker_resetState->defaultTrans = new ResetDefaultTran();
 	StateWalker* skyWalker_calState = new StateWalker();
 	skyWalker_calState->defaultTrans = new CalDefaultTran();
+
+	// setup hardware config.
+	runDisplay(); //TODO make this a thread
+
 	pthread_t polling;
 	polling = pthread_create(&polling, NULL, PollingThread, NULL );
 	if(polling){
@@ -41,7 +48,9 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "System Initialized\n" << std::endl;
 
-	skyWalker_calState->defaultTran();
+	StateWalker* currentWalker = skyWalker_resetState;
+	currentWalker->defaultTran();
+	init();
 
 	for(;;){
 		receiveID = MsgReceive(channel_id->chid, &recievedMessage, sizeof(recievedMessage), NULL);
@@ -49,7 +58,18 @@ int main(int argc, char *argv[]) {
 			MsgReply(receiveID, EOK, NULL, 0);
 		}else{
 			MsgReply(receiveID, EOK, &replyMessage, sizeof(replyMessage));
-			skyWalker_calState->accept(recievedMessage.triggerEvent);
+
+			currentWalker->accept(recievedMessage.triggerEvent);
+
+			if(recievedMessage.triggerEvent == Reset){
+				currentWalker = skyWalker_resetState;
+				currentWalker->defaultTran();
+			}else if( currentWalker->is_in() == Set_Tire_Circ && recievedMessage.triggerEvent == Set){
+				currentWalker = skyWalker_calState;
+				currentWalker->defaultTran();
+			}else if( calculateIsOn && recievedMessage.triggerEvent == Sensor){
+				addReading();
+			}
 			//std::cout << DEBUGINT << std::endl;
 		}
 	}

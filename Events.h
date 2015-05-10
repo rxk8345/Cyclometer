@@ -12,8 +12,8 @@ typedef enum {
 	NAE,
 	SetTire,
 	Set,
+	Mode,
 	Reset,
-	ToggleMode,
 	Start_Stop,
 	Increase,
 	Sensor,
@@ -29,7 +29,6 @@ typedef enum {
 	Cal_Speed,
 	Cal_Distance,
 	Cal_Time,
-
 } state;
 
 

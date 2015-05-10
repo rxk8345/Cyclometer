@@ -65,11 +65,16 @@ void* PollingThread(void* args){
 			sendingMessage.triggerEvent = Increase;
 			break;
 		case 'm':
-			sendingMessage.triggerEvent = ToggleMode;
+			sendingMessage.triggerEvent = Mode;
 			break;
 		case 'a':
 			sendingMessage.triggerEvent = Start_Stop;
 			break;
+		case 'r':
+			sendingMessage.triggerEvent = Reset;
+			break;
+		case 'e':
+			sendingMessage.triggerEvent = Sensor;
 		}
 
 		MsgSend( connectionID, &sendingMessage, sizeof(sendingMessage), &replyMessage, sizeof(replyMessage) );

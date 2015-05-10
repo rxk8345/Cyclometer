@@ -51,6 +51,24 @@ StateNode* CalDefaultTran::accept(){
 }
 
 
+
+bool TranSetUnitModePressed::checkAccept(event e){
+	return e == Mode;
+}
+
+StateNode* TranSetUnitModePressed::accept(){
+	StateNode* returnState = new SetUnitState();
+	// action list happens here
+	if( returnState != NULL){
+		returnState->entry();
+	}else{
+		std::cout << "oh crap " << std::endl;
+	}
+	return returnState;
+}
+
+
+
 bool TranUnitToCirc::checkAccept(event e){
 	return e == SetTire;
 }
@@ -119,7 +137,7 @@ StateNode * TranManualStartStop::accept(){
 
 
 bool TranManualToAuto::checkAccept(event e){
-	return e == ToggleMode;
+	return e == Mode;
 }
 
 StateNode * TranManualToAuto::accept(){
@@ -139,7 +157,7 @@ StateNode * TranManualToAuto::accept(){
 
 
 bool TranAutoToManual::checkAccept(event e){
-	return e == ToggleMode;
+	return e == Mode;
 }
 
 StateNode * TranAutoToManual::accept(){

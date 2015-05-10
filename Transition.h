@@ -35,6 +35,13 @@ public:
 	StateNode* accept();
 };
 
+// mode button pressed to toggle between measurement units
+class TranSetUnitModePressed: public Transition{
+public:
+	bool checkAccept(event e);
+	StateNode* accept();
+};
+
 // transition from set unit state to set tire circ with SetTire event
 class TranUnitToCirc: public Transition{
 public:
