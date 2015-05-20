@@ -9,6 +9,7 @@
 #define STATE_H_
 
 #include "Events.h"
+#include "Display.h"
 
 class Transistion;
 

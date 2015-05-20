@@ -8,6 +8,11 @@
 
 //class State1;
 extern modeEnum mode;
+extern int tireSize;
+extern int units;
+extern int displayMode;
+extern bool calculateIsOn;
+
 
 // default reset super state transition
 bool ResetDefaultTran::checkAccept(event e){
@@ -59,6 +64,17 @@ bool TranSetUnitModePressed::checkAccept(event e){
 StateNode* TranSetUnitModePressed::accept(){
 	StateNode* returnState = new SetUnitState();
 	// action list happens here
+	if(units == 1){
+		units = 2;
+	}else if(units == 2){
+		units = 1;
+	}else{
+		std::cout << "Units toggle BROKEN in transition!!!" << std::endl;
+	}
+
+	std::cout << "Units: " << units << std::endl;
+
+
 	if( returnState != NULL){
 		returnState->entry();
 	}else{
@@ -70,7 +86,7 @@ StateNode* TranSetUnitModePressed::accept(){
 
 
 bool TranUnitToCirc::checkAccept(event e){
-	return e == SetTire;
+	return e == Set;
 }
 
 StateNode* TranUnitToCirc::accept(){
@@ -96,11 +112,13 @@ bool TranSetTireIncrease::checkAccept(event e){
 
 StateNode * TranSetTireIncrease::accept(){
 	StateNode * returnState = new SetTireCircState();
-	//SetTireCircState state;
-	//returnState = &state;
 
 	// action list happens here
 	if( returnState != NULL){
+		tireSize++;
+		if( tireSize > 220){
+			tireSize = 190;
+		}
 		returnState->entry();
 	}else{
 		std::cout << "oh crap " << std::endl;
@@ -121,10 +139,15 @@ bool TranManualStartStop::checkAccept(event e){
 
 StateNode * TranManualStartStop::accept(){
 	StateNode * returnState = new ManualState();
-	//ManualState state;
-	//returnState = &state;
 
 	// action list happens here
+
+	if(calculateIsOn){
+		calculateIsOn = false;
+	}else{
+		calculateIsOn = true;
+	}
+
 	if( returnState != NULL){
 		returnState->entry();
 	}else{
@@ -137,7 +160,7 @@ StateNode * TranManualStartStop::accept(){
 
 
 bool TranManualToAuto::checkAccept(event e){
-	return e == Mode;
+	return e == Set && displayMode != 1;
 }
 
 StateNode * TranManualToAuto::accept(){
@@ -157,7 +180,7 @@ StateNode * TranManualToAuto::accept(){
 
 
 bool TranAutoToManual::checkAccept(event e){
-	return e == Mode;
+	return e == Set && displayMode != 1;
 }
 
 StateNode * TranAutoToManual::accept(){
@@ -178,7 +201,7 @@ StateNode * TranAutoToManual::accept(){
 
 
 bool TranChangeTireManual::checkAccept(event e){
-	return e == SetTire;
+	return e == Set && displayMode == 1; //distance
 }
 
 StateNode * TranChangeTireManual::accept(){
@@ -197,7 +220,7 @@ StateNode * TranChangeTireManual::accept(){
 
 
 bool TranChangeTireAuto::checkAccept(event e){
-	return e == SetTire;
+	return e == Set && displayMode == 1; //distance
 }
 
 StateNode * TranChangeTireAuto::accept(){
@@ -260,6 +283,10 @@ StateNode * TranChangeTireIncrease::accept(){
 	StateNode * returnState = new ChangeTireCircState;
 	// action list happens here
 	if( returnState != NULL){
+		tireSize++;
+		if( tireSize > 220){
+			tireSize = 190;
+		}
 		returnState->entry();
 	}else{
 		std::cout << "oh crap " << std::endl;

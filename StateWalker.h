@@ -28,12 +28,6 @@
 #include <semaphore.h>
 #include <errno.h>
 
-#define CHANNELNAME "bike_channel"
-typedef struct _pulse msg_header_t;
-typedef struct{
-	msg_header_t hdr;
-	event triggerEvent;
-}Message;
 
 
 class StateWalker{
@@ -48,6 +42,5 @@ public:
 	Transition* defaultTrans;
 };
 
-void* PollingThread(void* args);
 
 #endif /* STATEWALKER_H_ */

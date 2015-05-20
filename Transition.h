@@ -8,9 +8,11 @@
 #ifndef TRANSITION_H_
 #define TRANSITION_H_
 
+#include "Calculate.h"
 #include "Events.h"
 
 class StateNode;
+
 
 //***************Prototype Class************
 class Transition{

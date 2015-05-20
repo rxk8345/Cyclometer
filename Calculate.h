@@ -8,15 +8,25 @@
 #ifndef CALCULATE_H_
 #define CALCULATE_H_
 
-#include <queue>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
+#include <cstdlib>
+#include <pthread.h>
+#include <unistd.h>
+#include "WheelSensor.h"
+#include "HAL.h"
+#include "StateWalker.h"
+
+extern WheelSensor sensor;
+extern int tireSize;
 
 
-void init();
-void addReading();
-double performCalculations();
+void initCalculations();
+void resetCalculations();
+void * calcTimer( void * dummy);
+void performCalculations();
 
 #endif /* CALCULATE_H_ */

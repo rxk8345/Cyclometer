@@ -36,6 +36,11 @@
 
 
 void setUpHardware();
+void setDecimalAnode0(bool b);
+void setDecimalAnode1(bool b);
+void setDecimalAnode2(bool b);
+void setDecimalAnode3(bool b);
+
 void setAnode0(int i);
 void setAnode1(int i);
 void setAnode2(int i);
@@ -43,9 +48,15 @@ void setAnode3(int i);
 
 int intToSegment(int i);
 void clearDisplay();
-void runDisplay();
+void * runDisplay( void * dummy);
+event pollInputs();
 
-
-
+void setWheelRotationLEDOn();
+void setWheelRotationLEDOff();
+void setMeasurementUnitLEDOn();
+void setMeasurementUnitLEDOff();
+void setStartStopLEDOn();
+void setStartStopLEDOff();
+void * runLedThread(void * dummy);
 
 #endif /* HAL_H_ */

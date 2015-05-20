@@ -12,10 +12,24 @@ uintptr_t portB;
 uintptr_t portC;
 uintptr_t controlPort ;
 
+//segments for anode 0
 int Anode0;
 int Anode1;
 int Anode2;
 int Anode3;
+
+bool Anode0Dec = false;
+bool Anode1Dec = false;
+bool Anode2Dec = false;
+bool Anode3Dec = false;
+
+bool Led2 = false; //miles
+bool Led1 = false; //start/stop
+bool Led0 = false; // rotation
+
+int ledMask = 0;
+
+pthread_t ledThread;
 
 void setUpHardware(){
 	int privity_err;
@@ -42,6 +56,11 @@ void setUpHardware(){
 	out8(portB, (0xFF));
 	sleep(1);
 
+	if(pthread_create(&ledThread, NULL, &runLedThread, NULL) == -1){
+		std::cout << "Failed to create Led Thread\n" << std::endl;
+	}
+
+
 	// testing LEDs
 	//out8(portA, (0b00000000));
 
@@ -53,22 +72,6 @@ void setUpHardware(){
 
 	//out8(portA, 0b00001100);
 	//out8(portB, 0b10110000);
-
-
-	// testing pushbuttons
-	int input = in8(portC);
-	if(input & MBMASK){
-		std::cout << "Mode Button Pressed\n" << std::endl;
-	}
-	else if(input & SSMASK){
-		std::cout << "Start/Stop Button Pressed\n" << std::endl;
-	}
-	else if(input & SBMASK){
-		std::cout << "Set Button Pressed\n" << std::endl;
-	}
-	else{
-		std::cout << "Unknown/No Button Pressed\n" << std::endl;
-	}
 
 
 	//testing anodes display
@@ -84,21 +87,81 @@ void setUpHardware(){
 
 }
 
+event lastEvent;
+
+event pollInputs(){
+
+	// testing pushbuttons
+	int input = in8(portC);
+	event returnEvent = NAE;
+	if( input == 127 ){
+		std::cout << "Reset Button Pressed\n" << std::endl;
+		returnEvent = Reset;
+	}else if(input & MBMASK){
+		std::cout << "Mode Button Pressed\n" << std::endl;
+		returnEvent = Mode;
+	}
+	else if(input & SSMASK){
+		std::cout << "Start/Stop Button Pressed\n" << std::endl;
+		returnEvent = Start_Stop;
+	}
+	else if(input & SBMASK){
+		std::cout << "Set Button Pressed\n" << std::endl;
+		returnEvent = Set;
+	}
+	else{
+		//std::cout << "Unknown/No Button Pressed\n" << std::endl;
+		returnEvent= NAE;
+	}
+
+	return returnEvent;
+}
+
+void setDecimalAnode0( bool b ){
+	Anode0Dec = b;
+}
+
+void setDecimalAnode1( bool b ){
+	Anode1Dec = b;
+}
+void setDecimalAnode2( bool b ){
+	Anode2Dec = b;
+}
+void setDecimalAnode3( bool b ){
+	Anode3Dec = b;
+}
+
 //3 --> 10110000
 void setAnode0(int i){
-	Anode0 = intToSegment(i);
+	int temp = intToSegment(i);
+	if(Anode0Dec){
+		temp = temp & 0b01111111;
+	}
+	Anode0 = temp;
 }
 
 void setAnode1(int i){
-	Anode1 = intToSegment(i);
+	int temp = intToSegment(i);
+	if(Anode1Dec){
+		temp = temp & 0b01111111;
+	}
+	Anode1 = temp;
 }
 
 void setAnode2(int i){
-	Anode2 = intToSegment(i);
+	int temp = intToSegment(i);
+	if(Anode2Dec){
+		temp = temp & 0b01111111;
+	}
+	Anode2 = temp;
 }
 
 void setAnode3(int i){
-	Anode3 = intToSegment(i);
+	int temp = intToSegment(i);
+	if(Anode3Dec){
+		temp = temp & 0b01111111;
+	}
+	Anode3 = temp;
 }
 
 int intToSegment(int i){
@@ -124,7 +187,7 @@ int intToSegment(int i){
 	case 9:
 		return 0b10010000;
 	default:
-		return 0b11000000;
+		return 0b11111111;
 
 	}
 }
@@ -132,39 +195,94 @@ int intToSegment(int i){
 void clearDisplay(){
 	usleep(500);
 	// Anodes (0 is on, 1 is off);
-	out8(portA, (0x0F));
+	out8(portA, (ledMask | 0b00001111));
 	// clear the 7-segment display (1 is off, 0 is on)
 	out8(portB, (0xFF));
+	Anode0Dec = false;
+	Anode1Dec = false;
+	Anode2Dec = false;
+	Anode3Dec = false;
 }
 
-void runDisplay(){
+void * runDisplay( void * dummy){
 	setUpHardware();
-	setAnode0(1);
-	setAnode1(2);
-	setAnode2(3);
-	setAnode3(4);
 
 	while(1){
+
 		//first digit
-		out8(portA, 0b00000111);
-		out8(portB, Anode0);
+		out8(portA, 0b00000111 | ledMask ); // anodes
+		out8(portB, Anode0); // segments
 		clearDisplay();
 
 		//second digit
-		out8(portA, 0b00001011);
+		out8(portA, 0b00001011 | ledMask );
 		out8(portB, Anode1);
 		clearDisplay();
 
 		//third digit
-		out8(portA, 0b00001101);
+		out8(portA, 0b00001101 | ledMask);
 		out8(portB, Anode2);
 		clearDisplay();
 
 		//fourth digit
-		out8(portA, 0b00001110);
+		out8(portA, 0b00001110 | ledMask);
 		out8(portB, Anode3);
 		clearDisplay();
-	}
 
+
+	}
+	return dummy;
 }
 
+void * runLedThread(void * dummy){
+
+	while(1){
+		if(Led2){
+			ledMask |= 0b10000000;
+		}
+
+		if(Led1){
+			ledMask |= 0b01000000;
+		}
+
+		if(Led0){
+			ledMask |= 0b00100000;
+		}
+		sleep(0.5);
+
+		if(Led2){ //keep miles light on
+			ledMask = 0b10000000;
+		}else{
+			ledMask = 0;
+		}
+
+		sleep(0.5);
+	}
+	return dummy;
+}
+
+void setWheelRotationLEDOn(){
+	Led0 = true;
+}
+
+void setWheelRotationLEDOff(){
+	Led0 = false;
+}
+
+void setMeasurementUnitLEDOn(){
+	//on for miles, off for km
+	Led2 = true;
+}
+
+void setMeasurementUnitLEDOff(){
+	//on for miles, off for km
+	Led2 = false;
+}
+
+void setStartStopLEDOn(){
+	Led1 = true;
+}
+
+void setStartStopLEDOff(){
+	Led1 = false;
+}
